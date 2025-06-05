@@ -8,7 +8,7 @@ function latex {
                 echo '\usepackage{amsmath, amssymb}' >> $filename.tex
                 echo '\usepackage{enumerate}' >> $filename.tex
                 echo '\usepackage{tikz}' >> $filename.tex
-                echo '\usepackage{listings, xcolor};' >> $filename.tex
+                echo '\usepackage{listings, xcolor}' >> $filename.tex
                 echo '' >> $filename.tex
 
                 echo '\lstset{' >> $filename.tex
