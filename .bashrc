@@ -1,59 +1,181 @@
 #!/bin/bash
 
-function latex {
-        for filename in "$@"
-        do
-                echo '\documentclass{jlreq}' >> $filename.tex
-                echo '' >> $filename.tex
-                echo '\usepackage{amsmath, amssymb}' >> $filename.tex
-                echo '\usepackage{enumerate}' >> $filename.tex
-                echo '\usepackage{tikz}' >> $filename.tex
-                echo '\usepackage{listings, xcolor}' >> $filename.tex
-                echo '' >> $filename.tex
+# --- Global Definitions ---
+if [ -f /etc/bashrc ]; then
+    . /etc/bashrc
+fi
 
-                echo '\lstset{' >> $filename.tex
-                echo '  basicstyle = {\ttfamily}, % 基本的なフォントスタイル ' >> $filename.tex
-                echo '  frame = {tbrl}, % 枠線の枠線。t: top, b: bottom, r: right, l: left' >> $filename.tex
-                echo '  breaklines = true, % 長い行の改行' >> $filename.tex
-                echo '  numbers = left, % 行番号の表示。left, right, none' >> $filename.tex
-                echo '  showspaces = false, % スペースの表示' >> $filename.tex
-                echo '  showstringspaces = false, % 文字列中のスペースの表示' >> $filename.tex
-                echo '  showtabs = false, %　タブの表示' >> $filename.tex
-                echo '  keywordstyle = \color{blue}, % キーワードのスタイル。intやwhileなど' >> $filename.tex
-                echo '  commentstyle = {\color[HTML]{1AB91A}}, % コメントのスタイル' >> $filename.tex
-                echo '  identifierstyle = \color{black}, % 識別子のスタイル　関数名や変数名' >> $filename.tex
-                echo '  stringstyle = \color{brown}, % 文字列のスタイル' >> $filename.tex
-                echo '  captionpos = t % キャプションの位置 t: 上、b: 下' >> $filename.tex
-                echo '}' >> $filename.tex
-                echo '' >> $filename.tex
-                echo '\title{}' >> $filename.tex
-                echo '\author{細川 夏風}' >> $filename.tex
-                echo '\date{\today}' >> $filename.tex
-                echo '' >> $filename.tex
-                echo '\begin{document}' >> $filename.tex
-                echo '' >> $filename.tex
-                echo '  \maketitle' >> $filename.tex
-                echo '' >> $filename.tex
-                echo '\begin{thebibliography}{99}' >> $filename.tex
-                echo '  ' >> $filename.tex
-                echo '\end{thebibliography}' >> $filename.tex
-                echo '\end{document}' >> $filename.tex
-        done
+# --- Path Settings ---
+if ! [[ "$PATH" =~ "$HOME/.local/bin:$HOME/bin:" ]]; then
+    PATH="$HOME/.local/bin:$HOME/bin:$PATH"
+fi
+# TeX Live 2023
+export PATH="/usr/local/texlive/2023/bin/x86_64-linux:$PATH"
+export MANPATH="/usr/local/texlive/2023/texmf-dist/doc/man:$MANPATH"
+export INFOPATH="/usr/local/texlive/2023/texmf-dist/doc/info:$INFOPATH"
+
+# --- Language Settings ---
+# --- Standard Aliases ---
+alias emacs='emacs -nw'
+alias l='ls'
+
+alias la=`ls -a`
+alias lal=`ls -al`
+
+# --- Functions ---
+
+# Windows クリップボードへコピー (UTF-8 -> CP932)
+function pbcopy {
+    iconv -f utf-8 -t cp932 | /mnt/c/Windows/System32/clip.exe
 }
 
+# Windows クリップボードから貼り付け
+function pbpaste {
+    powershell.exe -NoProfile -Command "Get-Clipboard" | tr -d "\r"
+}
+
+# LaTeX 初期化 (jlreq + listings)
+function latex_init {
+    for filename in "$@"; do
+        local base="${filename%.tex}"
+        if [ -f "$base.tex" ]; then
+            echo "Warning: $base.tex already exists. Skipped."
+            continue
+        fi
+
+        cat << 'EOT' > "$base.tex"
+\documentclass[paper=a4, fontsize=10pt]{jlreq}
+
+\usepackage{amsmath, amssymb}
+\usepackage{enumerate}
+\usepackage{tikz}
+\usepackage{listings, xcolor}
+
+\lstset{
+  basicstyle = {\ttfamily},
+  frame = {tbrl},
+  breaklines = true,
+  numbers = left,
+  showspaces = false,
+  showstringspaces = false,
+  showtabs = false,
+  keywordstyle = \color{blue},
+  commentstyle = {\color[HTML]{1AB91A}},
+  identifierstyle = \color{black},
+  stringstyle = \color{brown},
+  captionpos = t
+}
+
+\title{}
+\author{学籍番号 1280391 \\ 細川 夏風}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\begin{thebibliography}{99}
+  \bibitem{}
+\end{thebibliography}
+
+\end{document}
+EOT
+        echo "Created: $base.tex"
+    done
+}
+
+# Markdown から PDF 生成 (Pandoc)
 function mdc {
-        pandoc -s $1.md -o $1.pdf --pdf-engine=xelatex -V mainfont="IPAexMincho" -V geometry:top=2.5cm,bottom=2.5cm,left=3cm,right=20cm
+    pandoc -s "$1.md" -o "$1.pdf" \
+        --pdf-engine=xelatex \
+        -V mainfont="IPAexMincho" \
+        -V geometry:top=2.5cm,bottom=2.5cm,left=2.5cm,right=2.5cm
 }
 
-function cpp_tmp {
-        for filename in "$@"
-        do
-                echo '#include <iostream>' >> $filename.cpp
-                echo '#include <bits/stdc++.h>' >> $filename.cpp
-                echo 'using namespace std;' >> $filename.cpp
-                echo '' >> $filename.cpp
-                echo 'int main() {' >> $filename.cpp
-                echo '' >> $filename.cpp
-                echo '}' >> $filename.cpp
-        done
+# LuaLaTeX 安全実行
+# LuaLaTeX Beamer
+function beamer_init {
+  # ファイル名が指定されていない場合のエラー処理
+  if [ -z "$1" ]; then
+    echo "エラー: ファイル名を指定してください。"
+    echo "使用法: beamer_init <ファイル名.tex>"
+    return 1
+  fi
+
+  cat << 'EOF' > "$1"
+\documentclass[11pt, aspectratio=169]{beamer}
+
+% LuaLaTeXで日本語を使うための必須パッケージ
+\usepackage{luatexja}
+
+% 便利な追加パッケージ
+\usepackage{booktabs}   % 表の罫線
+\usepackage{tikz}       % 図形描画
+\usepackage{listings}   % ソースコード挿入
+\lstset{
+  basicstyle=\ttfamily\scriptsize,
+  frame=single,
+  breaklines=true,
+  numbers=left,
+  numberstyle=\tiny
 }
+
+% テーマとカラーテーマの設定
+\usetheme{Madrid}
+\usecolortheme{orchid}
+
+% セクション開始時の自動表紙（扉絵）設定
+\AtBeginSection[]{
+  \begin{frame}
+    \vfill
+    \centering
+    \begin{beamercolorbox}[sep=8pt,center,shadow=true,rounded=true]{title}
+      \usebeamerfont{title}\insertsectionhead\par%
+    \end{beamercolorbox}
+    \vfill
+  \end{frame}
+}
+
+% タイトル情報
+\title{}
+\subtitle{}
+\author{学籍番号(Student ID): 1280391 \\ 氏名(Name): 細川夏風(Hosokawa Natsuka)}
+\institute{高知工科大学(Kochi Univ of Tech)}
+\date{\today}
+
+\begin{document}
+
+% タイトルスライド
+\begin{frame}
+    \titlepage
+\end{frame}
+
+% 目次スライド
+\begin{frame}{目次}
+    \tableofcontents
+\end{frame}
+
+% ==========================================
+% ここから本文
+% ==========================================
+
+\section{セクション1}
+
+\begin{frame}{スライドタイトル}
+    % ここに内容を記述
+\end{frame}
+
+\end{document}
+EOF
+
+  echo "$1 を作成しました。"
+  echo "コンパイルするには以下のコマンドを実行してください："
+  echo "lualatex $1"
+}
+
+# bashrc.d 読み込み
+if [ -d ~/.bashrc.d ]; then
+    for rc in ~/.bashrc.d/*; do
+        [ -f "$rc" ] && . "$rc"
+    done
+fi
