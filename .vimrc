@@ -1,111 +1,202 @@
 " ============================================================
-" 0. プラグイン管理 (vim-plug)
-" ============================================================
-call plug#begin('~/.vim/plugged')
-
-" LaTeX用強力補完プラグイン
-Plug 'lervag/vimtex'
-
-" 自動補完（常にONにする）軽量プラグインを追加
-Plug 'lifepillar/vim-mucomplete'
-
-call plug#end()
-" ============================================================
 " 1. Leader キーの設定 (スペースを特等席に)
 " ============================================================
 let mapleader = "\<Space>"
 
 " スペース + w で保存
 nnoremap <Leader>w :w<CR>
+
+" スペース + e で行末へ
 nnoremap <Leader>e $
+
 " スペース + q で終了
 nnoremap <Leader>q :q<CR>
 nnoremap <Leader>wq :wq<CR>
-" スペース + h で検索ハイライトを消す (EscEscより指が楽かもしれません)
+
+" スペース + h で検索ハイライト解除
 nnoremap <Leader>h :nohlsearch<CR>
 
-" バッファ（開いているファイル）の切り替え
-" スペース + n で次、スペース + p で前
+" バッファ切り替え
 nnoremap <Leader>n :bn<CR>
 nnoremap <Leader>p :bp<CR>
 
-" ヴィジュアルモードで スペース+スペース でノーマルモードに戻る（トグル）
+" ヴィジュアルモード解除
 vnoremap <Leader><Leader> <Esc>
-" Space + j でコマンド入力状態にする (:! まで打たれた状態になる)
+
+" shell command
 nnoremap <Leader>j :! 
 
+" コマンドモード
 nnoremap <Leader>; :
-nnoremap <Leader>s ?
+
+" 後方検索
+nnoremap <Leader>s ? 
+
+" 置換
 nnoremap <Leader>r :%s /
-nnoremap <Leader>e $
 
 " ============================================================
-" 2. 表示・外観・編集設定 (タブ幅2)
+" 2. 表示・外観・編集設定
 " ============================================================
-set number          " 行番号を表示
+
 set encoding=utf-8
-set title           " 編集中のファイル名をタイトルバーに表示
-set showmatch       " 括弧の対応を強調
-syntax enable
-syntax on           " シンタックスハイライト有効
 
-set tabstop=2       " タブ幅2
-set shiftwidth=2    " インデント幅2
-set expandtab       " タブをスペースに
+" 行番号
+set number
+
+" 相対行番号（慣れたら超便利）
+" set relativenumber
+
+" 現在行を強調
+set cursorline
+
+" タイトル表示
+set title
+
+" 対応括弧強調
+set showmatch
+
+" シンタックス
+syntax enable
+syntax on
+
+" true color
+set termguicolors
+
+" タブ設定
+set tabstop=2
+set shiftwidth=2
+set expandtab
 set autoindent
 set smartindent
+
+" Backspace 強化
 set backspace=indent,eol,start
+
+" クリップボード共有
 set clipboard+=unnamed,unnamedplus
 
-" ============================================================
-" 3. 検索設定 (移動の効率化を追加)
-" ============================================================
-set ignorecase      " 大文字小文字区別なし
-set smartcase       " 大文字が含まれる時は区別
-set incsearch       " 入力中から検索
-set hlsearch        " ハイライト
-
-" ============================================================
-" 4. その他・便利設定
-" ============================================================
+" マウス有効
 set mouse=a
+
+" swapfile 無効
 set noswapfile
+
+" buffer保持
 set hidden
 
-" [変更禁止エリア: コマンドライン移動]
+" undo 永続化
+set undofile
+
+" split方向を自然に
+set splitbelow
+set splitright
+
+" タブや空白の可視化
+set list
+set listchars=tab:>-,trail:_,extends:>,precedes:<,nbsp:%
+
+" sign column 常時表示
+set signcolumn=yes
+
+" ============================================================
+" 3. 検索設定
+" ============================================================
+
+set ignorecase
+set smartcase
+set incsearch
+set hlsearch
+
+" ============================================================
+" 4. コマンド補完
+" ============================================================
+
+set wildmenu
+set wildmode=longest:full,full
+
+" ============================================================
+" 5. ステータスライン
+" ============================================================
+
+set laststatus=2
+set ruler
+
+set statusline=
+set statusline+=\ %f
+set statusline+=%m
+set statusline+=%r
+set statusline+=%=
+set statusline+=[%{&ff}]
+set statusline+=\ [%y]
+set statusline+=\ [%l/%L]
+set statusline+=\ [%p%%]
+
+" ============================================================
+" 6. コマンドライン移動
+" ============================================================
+
 cnoremap <C-a> <Home>
 cnoremap <C-e> <End>
 cnoremap <C-b> <Left>
 cnoremap <C-f> <Right>
 cnoremap <C-d> <Del>
 
-" [変更禁止エリア: 履歴呼び出し]
+" 履歴移動
 cnoremap <C-p> <Up>
 cnoremap <C-n> <Down>
 
-" [変更禁止エリア: zenhan.exe IME自動オフ]
+" ============================================================
+" 7. IME自動OFF
+" ============================================================
+
 let g:zenhan_path = '/mnt/c/zenhan.exe'
 autocmd InsertLeave * call system(g:zenhan_path . ' 0')
 
-" --- モード切り替え ---
-" 遠い Esc キーの代わりに jj を使う
+" ============================================================
+" 8. モード切り替え
+" ============================================================
+
+" jj で ESC
 inoremap <silent> jj <Esc>
 
-" --- 検索ハイライトの解除 ---
-" Esc 2回で検索のハイライトを消す
+" ESC2回で検索ハイライト解除
 nnoremap <Esc><Esc> :nohlsearch<CR>
 
-" ファイル形式の検出、プラグイン、インデントをすべて有効化
+" ============================================================
+" 9. ウィンドウ移動
+" ============================================================
+
+nnoremap <C-h> <C-w>h
+nnoremap <C-j> <C-w>j
+nnoremap <C-k> <C-w>k
+nnoremap <C-l> <C-w>l
+
+" ============================================================
+" 10. FileType
+" ============================================================
+
 filetype plugin indent on
 
-" 構文に基づいた補完（オムニ補完）を有効化
+" ============================================================
+" 11. 補完
+" ============================================================
+
 set omnifunc=syntaxcomplete#Complete
 
 " ============================================================
-" 自動補完 (mucomplete) の設定
+" 12. カラースキーム
 " ============================================================
-" ポップアップメニューの表示方法（必須設定）
-" set completeopt=menuone,noinsert,noselect
 
-" 起動時から自動補完を常にONにする
-" let g:mucomplete#enable_auto_at_startup = 1
+colorscheme habamax
+
+" ============================================================
+" 13. Plugin (必要になったら)
+" ============================================================
+
+" call plug#begin()
+
+" Git変更表示
+" Plug 'airblade/vim-gitgutter'
+
+" call plug#end()
