@@ -20,6 +20,8 @@ vis:map(vis.modes.NORMAL, ' ;', ':')
 vis:map(vis.modes.NORMAL, ' d', ':split<Enter>')
 vis:map(vis.modes.NORMAL, ' dv', ':vsplit<Enter>')
 vis:map(vis.modes.INSERT, 'jj', '<Escape>')
+-- <Space>t でエディタを一時停止（サスペンド）してターミナルに戻る
+vis:map(vis.modes.NORMAL, ' t', '<C-z>')
 
 -- 検索と置換
 vis:map(vis.modes.NORMAL, ' s', '?')
